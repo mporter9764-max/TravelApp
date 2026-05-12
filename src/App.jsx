@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from './supabase'
-import { DEFAULT_TABS, DEFAULT_ITEMS, DEFAULT_DEPARTURE } from './defaultData'
+import { DEFAULT_TABS, DEFAULT_ITEMS, DEFAULT_DEPARTURE, FINAL_CHECKLIST_ITEMS } from './defaultData'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function parseTime(str) {
@@ -269,7 +269,7 @@ function ChecklistTab({ tabId, items, checkedIds, onToggle, onAddItem, onToggleC
 }
 
 // ── Departure Tab ─────────────────────────────────────────────────────────────
-function DepartureTab({ settings, onSave }) {
+function DepartureTab({ settings, onSave, items, checkedIds, onToggle, onAddItem, onToggleCritical, onAddTag, onRemoveTag, onDeleteItem, onDeleteCategory, tripId }) {
   const [d, setD] = useState(settings)
   const [wakeInput, setWakeInput] = useState('07:00')
   const [saving, setSaving] = useState(false)
@@ -304,56 +304,73 @@ function DepartureTab({ settings, onSave }) {
     </div>
   )
 
-  return (
+return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-        {/* Inputs */}
-        <Card>
-          <SectionLabel>flight inputs</SectionLabel>
-          <InputRow label="departure time" field="departureTime" isTime />
-          <InputRow label="boarding cutoff (min)" field="boardingCutoff" />
-          <InputRow label="boarding duration (min)" field="boardingDuration" />
-          <InputRow label="bar time (min)" field="barTime" />
-          <InputRow label="bar to gate (min)" field="barToGate" />
-          <InputRow label="security duration (min)" field="securityDuration" />
-          <InputRow label="bag check (min)" field="bagCheckDuration" />
-          <InputRow label="parking to bag check (min)" field="parkingToBagCheck" />
-          <InputRow label="commute to airport (min)" field="commuteDuration" />
-          <InputRow label="wake up to leave (min)" field="wakeToLeave" />
-          <div style={{ marginTop: 12 }}>
-            <Btn onClick={handleSave} disabled={saving} style={{ width: '100%' }}>{saving ? 'Saving...' : 'Save settings'}</Btn>
-          </div>
-        </Card>
-
-        {/* Milestones */}
-        <Card>
-          <SectionLabel>calculated milestones</SectionLabel>
-          {milestones.map(m => {
-            const isHidden = (d.hiddenMilestones || []).includes(m.key)
-            return (
-              <div key={m.key} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '6px 0', borderBottom: '1px solid var(--border-light)',
-              }}>
-                <span style={{ fontSize: 12, color: m.highlight ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: m.highlight ? 700 : 400 }}>
-                  {m.label}
-                </span>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <button onClick={() => toggleHide(m.key)} style={{
-                    background: 'none', border: 'none', fontSize: 10,
-                    color: 'var(--text-muted)', padding: 0, cursor: 'pointer',
-                  }}>{isHidden ? 'show' : 'hide'}</button>
-                  {!isHidden && (
-                    <span style={{ fontSize: 13, fontWeight: 700, color: m.highlight ? 'var(--accent)' : 'var(--green)', minWidth: 70, textAlign: 'right' }}>
-                      {formatTime(m.time)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </Card>
+      {/* Final checklist — top */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 400, color: 'var(--text-primary)', marginBottom: 4 }}>final checklist</div>
+        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>last check before you leave</p>
+        <ChecklistTab
+          tabId="depart"
+          items={items}
+          checkedIds={checkedIds}
+          onToggle={onToggle}
+          onAddItem={onAddItem}
+          onToggleCritical={onToggleCritical}
+          onAddTag={onAddTag}
+          onRemoveTag={onRemoveTag}
+          onDeleteItem={onDeleteItem}
+          onDeleteCategory={onDeleteCategory}
+          tripId={tripId}
+        />
       </div>
+
+      {/* Flight inputs */}
+      <Card style={{ marginBottom: 16 }}>
+        <SectionLabel>flight inputs</SectionLabel>
+        <InputRow label="departure time" field="departureTime" isTime />
+        <InputRow label="boarding cutoff (min)" field="boardingCutoff" />
+        <InputRow label="boarding duration (min)" field="boardingDuration" />
+        <InputRow label="bar time (min)" field="barTime" />
+        <InputRow label="bar to gate (min)" field="barToGate" />
+        <InputRow label="security duration (min)" field="securityDuration" />
+        <InputRow label="bag check (min)" field="bagCheckDuration" />
+        <InputRow label="parking to bag check (min)" field="parkingToBagCheck" />
+        <InputRow label="commute to airport (min)" field="commuteDuration" />
+        <InputRow label="wake up to leave (min)" field="wakeToLeave" />
+        <div style={{ marginTop: 12 }}>
+          <Btn onClick={handleSave} disabled={saving} style={{ width: '100%' }}>{saving ? 'Saving...' : 'Save settings'}</Btn>
+        </div>
+      </Card>
+
+      {/* Milestones — below inputs */}
+      <Card style={{ marginBottom: 16 }}>
+        <SectionLabel>calculated milestones</SectionLabel>
+        {milestones.map(m => {
+          const isHidden = (d.hiddenMilestones || []).includes(m.key)
+          return (
+            <div key={m.key} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '6px 0', borderBottom: '1px solid var(--border-light)',
+            }}>
+              <span style={{ fontSize: 12, color: m.highlight ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: m.highlight ? 700 : 400 }}>
+                {m.label}
+              </span>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <button onClick={() => toggleHide(m.key)} style={{
+                  background: 'none', border: 'none', fontSize: 10,
+                  color: 'var(--text-muted)', padding: 0, cursor: 'pointer',
+                }}>{isHidden ? 'show' : 'hide'}</button>
+                {!isHidden && (
+                  <span style={{ fontSize: 13, fontWeight: 700, color: m.highlight ? 'var(--accent)' : 'var(--green)', minWidth: 70, textAlign: 'right' }}>
+                    {formatTime(m.time)}
+                  </span>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </Card>
 
       {/* Buffer calculator */}
       <Card>
@@ -400,11 +417,21 @@ export default function App() {
         // Load or seed items
        const { data: existingItems } = await supabase.from('items').select('*').order('sort_order')
         if (existingItems && existingItems.length > 0) {
-          setItems(existingItems)
+          const hasFinalChecklist = existingItems.some(i => i.tab === 'depart')
+          if (!hasFinalChecklist) {
+            const toInsert = FINAL_CHECKLIST_ITEMS.map((item, i) => ({ ...item, sort_order: i }))
+            const { data: inserted } = await supabase.from('items').insert(toInsert).select()
+            if (inserted) setItems([...existingItems, ...inserted])
+            else setItems(existingItems)
+          } else {
+            setItems(existingItems)
+          }
         } else if (existingItems && existingItems.length === 0) {
-          const toInsert = DEFAULT_ITEMS.map((item, i) => ({ ...item, sort_order: i }))
+          const allItems = [...DEFAULT_ITEMS, ...FINAL_CHECKLIST_ITEMS]
+          const toInsert = allItems.map((item, i) => ({ ...item, sort_order: i }))
           const { data: inserted } = await supabase.from('items').insert(toInsert).select()
           if (inserted) setItems(inserted)
+        }
         }
 
         // Load or create active trip
@@ -621,7 +648,20 @@ const removeTag = useCallback(async (itemId, tag) => {
             tripId={tripId}
           />
         ) : (
-          <DepartureTab settings={departure} onSave={saveDeparture} />
+          <DepartureTab
+          settings={departure}
+          onSave={saveDeparture}
+          items={items}
+          checkedIds={checkedIds}
+          onToggle={toggleItem}
+          onAddItem={addItem}
+          onToggleCritical={toggleCritical}
+          onAddTag={addTag}
+          onRemoveTag={removeTag}
+          onDeleteItem={deleteItem}
+          onDeleteCategory={deleteCategory}
+          tripId={tripId}
+        />
         )}
       </div>
     </div>
