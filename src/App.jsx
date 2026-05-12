@@ -99,13 +99,14 @@ function Spinner() {
 }
 
 // ── Checklist Tab ─────────────────────────────────────────────────────────────
-function ChecklistTab({ tabId, items, checkedIds, onToggle, onAddItem, onToggleCritical, onAddTag, tripId }) {
+function ChecklistTab({ tabId, items, checkedIds, onToggle, onAddItem, onToggleCritical, onAddTag, onDeleteItem, onDeleteCategory, tripId }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [criticalOnly, setCriticalOnly] = useState(false)
   const [newItems, setNewItems] = useState({})
   const [newTags, setNewTags] = useState({})
   const [addingTag, setAddingTag] = useState(null)
+  const [confirmDeleteCat, setConfirmDeleteCat] = useState(null)
 
   const tabItems = items.filter(i => i.tab === tabId)
   const categories = [...new Set(tabItems.map(i => i.category))]
@@ -147,9 +148,19 @@ function ChecklistTab({ tabId, items, checkedIds, onToggle, onAddItem, onToggleC
 
         return (
           <div key={cat} style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{cat}</span>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{checkedCount} / {allCatItems.length}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{checkedCount} / {allCatItems.length}</span>
+                {confirmDeleteCat === cat ? (
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => { onDeleteCategory(tabId, cat); setConfirmDeleteCat(null) }} style={{ background: 'var(--red)', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', fontSize: 11, padding: '2px 8px', cursor: 'pointer' }}>delete all</button>
+                    <button onClick={() => setConfirmDeleteCat(null)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 11, padding: '2px 8px', cursor: 'pointer', color: 'var(--text-muted)' }}>cancel</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmDeleteCat(cat)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 11, padding: '2px 6px', cursor: 'pointer', color: 'var(--red)' }}>✕ category</button>
+                )}
+              </div>
             </div>
 
             {catItems.map(item => {
@@ -207,11 +218,17 @@ function ChecklistTab({ tabId, items, checkedIds, onToggle, onAddItem, onToggleC
                     }}>+ tag</button>
                   )}
 
-                  {/* Critical star */}
+                {/* Critical star */}
                   <span onClick={() => onToggleCritical(item.id, !item.critical)} style={{
                     fontSize: 14, cursor: 'pointer', flexShrink: 0,
                     color: item.critical ? 'var(--red)' : 'var(--border)',
                   }}>★</span>
+
+                  {/* Delete item */}
+                  <button onClick={() => onDeleteItem(item.id)} style={{
+                    background: 'none', border: 'none', color: 'var(--border)',
+                    fontSize: 15, cursor: 'pointer', padding: 0, lineHeight: 1, flexShrink: 0,
+                  }} title="delete item">×</button>
                 </div>
               )
             })}
@@ -451,6 +468,24 @@ export default function App() {
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, tags } : i))
   }, [items])
 
+  const deleteItem = useCallback(async (itemId) => {
+    await supabase.from('checked_items').delete().eq('item_id', itemId)
+    await supabase.from('items').delete().eq('id', itemId)
+    setItems(prev => prev.filter(i => i.id !== itemId))
+    setCheckedIds(prev => { const s = new Set(prev); s.delete(itemId); return s })
+  }, [])
+
+  const deleteCategory = useCallback(async (tabId, category) => {
+    const toDelete = items.filter(i => i.tab === tabId && i.category === category)
+    for (const item of toDelete) {
+      await supabase.from('checked_items').delete().eq('item_id', item.id)
+    }
+    const ids = toDelete.map(i => i.id)
+    await supabase.from('items').delete().in('id', ids)
+    setItems(prev => prev.filter(i => !(i.tab === tabId && i.category === category)))
+    setCheckedIds(prev => { const s = new Set(prev); ids.forEach(id => s.delete(id)); return s })
+  }, [items])
+
   // ── Start new trip ────────────────────────────────────────────────────────
   const startNewTrip = async () => {
     const { data } = await supabase.from('trips').insert([{ name: `trip ${Date.now()}` }]).select()
@@ -562,7 +597,7 @@ export default function App() {
       {/* Content */}
       <div style={{ padding: '20px 24px', maxWidth: 900, margin: '0 auto' }}>
         {tab !== 'depart' ? (
-          <ChecklistTab
+         <ChecklistTab
             tabId={tab}
             items={items}
             checkedIds={checkedIds}
@@ -570,6 +605,8 @@ export default function App() {
             onAddItem={addItem}
             onToggleCritical={toggleCritical}
             onAddTag={addTag}
+            onDeleteItem={deleteItem}
+            onDeleteCategory={deleteCategory}
             tripId={tripId}
           />
         ) : (
