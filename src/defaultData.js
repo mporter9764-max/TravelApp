@@ -218,7 +218,7 @@ export const FINAL_CHECKLIST_ITEMS = [
   { tab: 'depart', category: 'final checklist', name: 'work computer', critical: false, tags: ['work'] },
 ]
 
-export const DEFAULT_DEPARTURE = {
+
 
 export const DEFAULT_DEPARTURE = {
   departureTime: '18:00',
