@@ -1,0 +1,51 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F7F4F0;
+  --bg-card: #FFFFFF;
+  --bg-hover: #F2EFE9;
+  --bg-subtle: #EAE6DF;
+  --border: #E0DBD3;
+  --border-light: #EDE9E2;
+  --text-primary: #1A1816;
+  --text-secondary: #5C5750;
+  --text-muted: #8C7B6B;
+  --accent: #C4622D;
+  --accent-light: #F5DDD0;
+  --accent-mid: #E8A882;
+  --header: #1A1816;
+  --red: #C0392B;
+  --red-bg: #FDECEA;
+  --green: #5C7A45;
+  --green-bg: #EBF2E4;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+input, select, textarea {
+  font-family: 'Lato', sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+button { cursor: pointer; font-family: 'Lato', sans-serif; }
+ul { list-style: none; }
