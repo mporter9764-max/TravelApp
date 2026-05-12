@@ -206,6 +206,20 @@ export const DEFAULT_ITEMS = [
   { tab: 'confirms', category: 'travel confirms', name: 'dogs (anti-anxiety meds)',critical: false, tags: [] },
 ]
 
+export const FINAL_CHECKLIST_ITEMS = [
+  { tab: 'depart', category: 'final checklist', name: 'wallet',        critical: true,  tags: [] },
+  { tab: 'depart', category: 'final checklist', name: 'phones',        critical: true,  tags: [] },
+  { tab: 'depart', category: 'final checklist', name: 'luggage',       critical: true,  tags: [] },
+  { tab: 'depart', category: 'final checklist', name: 'bookbags',      critical: false, tags: [] },
+  { tab: 'depart', category: 'final checklist', name: 'passports',     critical: true,  tags: ['international'] },
+  { tab: 'depart', category: 'final checklist', name: 'license',       critical: true,  tags: [] },
+  { tab: 'depart', category: 'final checklist', name: 'garage door',   critical: true,  tags: [] },
+  { tab: 'depart', category: 'final checklist', name: 'critical meds', critical: true,  tags: [] },
+  { tab: 'depart', category: 'final checklist', name: 'work computer', critical: false, tags: ['work'] },
+]
+
+export const DEFAULT_DEPARTURE = {
+
 export const DEFAULT_DEPARTURE = {
   departureTime: '18:00',
   boardingCutoff: 10,
