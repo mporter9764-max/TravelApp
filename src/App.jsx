@@ -99,7 +99,7 @@ function Spinner() {
 }
 
 // ── Checklist Tab ─────────────────────────────────────────────────────────────
-function ChecklistTab({ tabId, items, checkedIds, onToggle, onAddItem, onToggleCritical, onAddTag, onDeleteItem, onDeleteCategory, tripId }) {
+function ChecklistTab({ tabId, items, checkedIds, onToggle, onAddItem, onToggleCritical, onAddTag, onRemoveTag, onDeleteItem, onDeleteCategory, tripId }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [criticalOnly, setCriticalOnly] = useState(false)
@@ -185,13 +185,17 @@ function ChecklistTab({ tabId, items, checkedIds, onToggle, onAddItem, onToggleC
                   {/* Name */}
                   <span style={{ flex: 1, fontSize: 13, color: 'var(--text-primary)', textDecoration: isChecked ? 'line-through' : 'none' }}>{item.name}</span>
 
-                  {/* Tags */}
+              {/* Tags */}
                   {(item.tags || []).map(tag => (
                     <span key={tag} style={{
                       fontSize: 10, padding: '2px 7px', borderRadius: 999,
                       background: 'var(--accent-light)', color: 'var(--accent)',
                       border: '1px solid var(--accent-mid)',
-                    }}>{tag}</span>
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                    }}>
+                      {tag}
+                      <span onClick={() => onRemoveTag(item.id, tag)} style={{ cursor: 'pointer', fontSize: 11, lineHeight: 1 }}>×</span>
+                    </span>
                   ))}
 
                   {/* Add tag inline */}
@@ -474,7 +478,13 @@ export default function App() {
     setItems(prev => prev.filter(i => i.id !== itemId))
     setCheckedIds(prev => { const s = new Set(prev); s.delete(itemId); return s })
   }, [])
-
+const removeTag = useCallback(async (itemId, tag) => {
+    const item = items.find(i => i.id === itemId)
+    if (!item) return
+    const tags = (item.tags || []).filter(t => t !== tag)
+    await supabase.from('items').update({ tags }).eq('id', itemId)
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, tags } : i))
+  }, [items])
   const deleteCategory = useCallback(async (tabId, category) => {
     const toDelete = items.filter(i => i.tab === tabId && i.category === category)
     for (const item of toDelete) {
@@ -605,8 +615,9 @@ export default function App() {
             onAddItem={addItem}
             onToggleCritical={toggleCritical}
             onAddTag={addTag}
-            onDeleteItem={deleteItem}
+         onDeleteItem={deleteItem}
             onDeleteCategory={deleteCategory}
+            onRemoveTag={removeTag}
             tripId={tripId}
           />
         ) : (
