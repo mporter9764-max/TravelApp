@@ -377,10 +377,10 @@ export default function App() {
     (async () => {
       try {
         // Load or seed items
-        const { data: existingItems } = await supabase.from('items').select('*').order('sort_order')
+       const { data: existingItems } = await supabase.from('items').select('*').order('sort_order')
         if (existingItems && existingItems.length > 0) {
           setItems(existingItems)
-        } else {
+        } else if (existingItems && existingItems.length === 0) {
           const toInsert = DEFAULT_ITEMS.map((item, i) => ({ ...item, sort_order: i }))
           const { data: inserted } = await supabase.from('items').insert(toInsert).select()
           if (inserted) setItems(inserted)
