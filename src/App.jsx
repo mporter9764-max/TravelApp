@@ -411,11 +411,11 @@ export default function App() {
   const [editTabLabel, setEditTabLabel] = useState('')
 
   // ── Load ──────────────────────────────────────────────────────────────────
-  useEffect(() => {
+useEffect(() => {
     (async () => {
       try {
         // Load or seed items
-       const { data: existingItems } = await supabase.from('items').select('*').order('sort_order')
+        const { data: existingItems } = await supabase.from('items').select('*').order('sort_order')
         if (existingItems && existingItems.length > 0) {
           const hasFinalChecklist = existingItems.some(i => i.tab === 'depart')
           if (!hasFinalChecklist) {
@@ -426,16 +426,12 @@ export default function App() {
           } else {
             setItems(existingItems)
           }
-      } else if (existingItems && existingItems.length === 0) {
+        } else if (existingItems && existingItems.length === 0) {
           const allItems = [...DEFAULT_ITEMS, ...FINAL_CHECKLIST_ITEMS]
           const toInsert = allItems.map((item, i) => ({ ...item, sort_order: i }))
           const { data: inserted } = await supabase.from('items').insert(toInsert).select()
           if (inserted) setItems(inserted)
         }
-      } catch (e) {
-        console.error(e)
-        setError('Could not connect to database.')
-      }
 
         // Load or create active trip
         const { data: trips } = await supabase.from('trips').select('*').order('started_at', { ascending: false }).limit(1)
