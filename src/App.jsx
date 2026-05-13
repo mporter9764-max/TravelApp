@@ -18,19 +18,20 @@ function formatTime(minutes) {
 }
 
 function calcMilestones(d) {
+  const n = k => parseFloat(d[k]) || 0
   const dep = parseTime(d.departureTime)
   const boardingEnd = dep
-  const boardingStart = boardingEnd - d.boardingDuration
-  const arriveGate = boardingStart - d.boardingCutoff
-  const leaveBar = arriveGate - d.barToGate
-  const barStart = leaveBar - d.barTime
-  const securityEnd = barStart - (d.securityToBar || 10)
-  const securityStart = securityEnd - d.securityDuration
-  const bagCheckEnd = securityStart - (d.bagCheckToSecurity || 10)
-  const bagCheckStart = bagCheckEnd - d.bagCheckDuration
-  const arriveAirport = bagCheckStart - d.parkingToBagCheck
-  const leaveHouse = arriveAirport - d.commuteDuration
-  const wakeUp = leaveHouse - d.wakeToLeave
+  const boardingStart = boardingEnd - n('boardingDuration')
+  const arriveGate = boardingStart - n('boardingCutoff')
+  const leaveBar = arriveGate - n('barToGate')
+  const barStart = leaveBar - n('barTime')
+  const securityEnd = barStart - n('securityToBar')
+  const securityStart = securityEnd - n('securityDuration')
+  const bagCheckEnd = securityStart - n('bagCheckToSecurity')
+  const bagCheckStart = bagCheckEnd - n('bagCheckDuration')
+  const arriveAirport = bagCheckStart - n('parkingToBagCheck')
+  const leaveHouse = arriveAirport - n('commuteDuration')
+  const wakeUp = leaveHouse - n('wakeToLeave')
 
   return [
     { key: 'wakeUp',         label: 'wake up',             time: wakeUp,         highlight: true  },
@@ -52,8 +53,8 @@ function calcBuffer(wakeUpInput, d) {
   const wakeActual = parseTime(wakeUpInput)
   const dep = parseTime(d.departureTime)
   const boardingStart = dep - d.boardingDuration - d.boardingCutoff
-  const arriveGate = wakeActual + d.wakeToLeave + d.commuteDuration + d.parkingToBagCheck + d.bagCheckDuration + (d.bagCheckToSecurity || 10) + d.securityDuration + (d.securityToBar || 10) + d.barTime + d.barToGate
-  const buffer = boardingStart - arriveGate
+  const n = k => parseFloat(d[k]) || 0
+  const arriveGate = wakeActual + n('wakeToLeave') + n('commuteDuration') + n('parkingToBagCheck') + n('bagCheckDuration') + n('bagCheckToSecurity') + n('securityDuration') + n('securityToBar') + n('barTime') + n('barToGate')  const buffer = boardingStart - arriveGate
   return { arriveGate, buffer }
 }
 
@@ -274,7 +275,7 @@ function DepartureTab({ settings, onSave, items, checkedIds, onToggle, onAddItem
 
   useEffect(() => { setD(settings) }, [settings])
 
-  const set = k => e => setD({ ...d, [k]: isNaN(e.target.value) ? e.target.value : Number(e.target.value) })
+  const set = k => e => setD({ ...d, [k]: e.target.value })
   const milestones = calcMilestones(d)
   const { arriveGate, buffer } = calcBuffer(wakeInput, d)
 
