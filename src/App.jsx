@@ -21,32 +21,30 @@ function calcMilestones(d) {
   const dep = parseTime(d.departureTime)
   const boardingEnd = dep
   const boardingStart = boardingEnd - d.boardingDuration
-  const gateDeadline = boardingStart - d.boardingCutoff
-  const leaveBar = gateDeadline - d.barToGate
-  const arriveBar = leaveBar - d.barTime
-  const securityEnd = arriveBar
+  const arriveGate = boardingStart - d.boardingCutoff
+  const leaveBar = arriveGate - d.barToGate
+  const barStart = leaveBar - d.barTime
+  const securityEnd = barStart - (d.securityToBar || 10)
   const securityStart = securityEnd - d.securityDuration
-  const bagCheckEnd = securityStart
+  const bagCheckEnd = securityStart - (d.bagCheckToSecurity || 10)
   const bagCheckStart = bagCheckEnd - d.bagCheckDuration
-  const arriveParking = bagCheckStart
-  const leaveParking = arriveParking - d.parkingToBagCheck
-  const leaveHouse = leaveParking - d.commuteDuration
+  const arriveAirport = bagCheckStart - d.parkingToBagCheck
+  const leaveHouse = arriveAirport - d.commuteDuration
   const wakeUp = leaveHouse - d.wakeToLeave
 
   return [
-    { key: 'boardingEnd',    label: 'boarding ends',        time: boardingEnd,    highlight: false },
-    { key: 'boardingStart',  label: 'boarding starts',      time: boardingStart,  highlight: false },
-    { key: 'gateDeadline',   label: 'must be at gate',      time: gateDeadline,   highlight: true  },
-    { key: 'leaveBar',       label: '⚠ leave bar',           time: leaveBar,       highlight: true  },
-    { key: 'arriveBar',      label: 'arrive bar',           time: arriveBar,      highlight: false },
-    { key: 'securityEnd',    label: 'security end',         time: securityEnd,    highlight: false },
-    { key: 'securityStart',  label: 'security start',       time: securityStart,  highlight: false },
-    { key: 'bagCheckEnd',    label: 'bag check done',       time: bagCheckEnd,    highlight: false },
-    { key: 'bagCheckStart',  label: 'bag check start',      time: bagCheckStart,  highlight: false },
-    { key: 'arriveParking',  label: 'arrive parking',       time: arriveParking,  highlight: false },
-    { key: 'leaveParking',   label: 'leave parking',        time: leaveParking,   highlight: false },
-    { key: 'leaveHouse',     label: 'leave house / hotel',  time: leaveHouse,     highlight: true  },
-    { key: 'wakeUp',         label: 'wake up',              time: wakeUp,         highlight: true  },
+    { key: 'wakeUp',         label: 'wake up',             time: wakeUp,         highlight: true  },
+    { key: 'leaveHouse',     label: 'leave house / hotel', time: leaveHouse,     highlight: true  },
+    { key: 'arriveAirport',  label: 'arrive at airport',   time: arriveAirport,  highlight: false },
+    { key: 'bagCheckStart',  label: 'bag check start',     time: bagCheckStart,  highlight: false },
+    { key: 'bagCheckEnd',    label: 'bag check end',       time: bagCheckEnd,    highlight: false },
+    { key: 'securityStart',  label: 'security start',      time: securityStart,  highlight: false },
+    { key: 'securityEnd',    label: 'security end',        time: securityEnd,    highlight: false },
+    { key: 'barStart',       label: 'arrive bar',          time: barStart,       highlight: false },
+    { key: 'leaveBar',       label: '⚠ leave bar',          time: leaveBar,       highlight: true  },
+    { key: 'arriveGate',     label: 'arrive at gate',      time: arriveGate,     highlight: true  },
+    { key: 'boardingStart',  label: 'boarding starts',     time: boardingStart,  highlight: false },
+    { key: 'boardingEnd',    label: 'boarding ends',       time: boardingEnd,    highlight: false },
   ]
 }
 
@@ -54,7 +52,7 @@ function calcBuffer(wakeUpInput, d) {
   const wakeActual = parseTime(wakeUpInput)
   const dep = parseTime(d.departureTime)
   const boardingStart = dep - d.boardingDuration - d.boardingCutoff
-  const arriveGate = wakeActual + d.wakeToLeave + d.commuteDuration + d.parkingToBagCheck + d.bagCheckDuration + d.securityDuration
+  const arriveGate = wakeActual + d.wakeToLeave + d.commuteDuration + d.parkingToBagCheck + d.bagCheckDuration + (d.bagCheckToSecurity || 10) + d.securityDuration + (d.securityToBar || 10) + d.barTime + d.barToGate
   const buffer = boardingStart - arriveGate
   return { arriveGate, buffer }
 }
@@ -331,10 +329,12 @@ return (
         <InputRow label="departure time" field="departureTime" isTime />
         <InputRow label="boarding cutoff (min)" field="boardingCutoff" />
         <InputRow label="boarding duration (min)" field="boardingDuration" />
-        <InputRow label="bar time (min)" field="barTime" />
         <InputRow label="bar to gate (min)" field="barToGate" />
+        <InputRow label="bar duration (min)" field="barTime" />
+        <InputRow label="security to bar (min)" field="securityToBar" />
         <InputRow label="security duration (min)" field="securityDuration" />
-        <InputRow label="bag check (min)" field="bagCheckDuration" />
+        <InputRow label="bag check to security (min)" field="bagCheckToSecurity" />
+        <InputRow label="bag check duration (min)" field="bagCheckDuration" />
         <InputRow label="parking to bag check (min)" field="parkingToBagCheck" />
         <InputRow label="commute to airport (min)" field="commuteDuration" />
         <InputRow label="wake up to leave (min)" field="wakeToLeave" />
